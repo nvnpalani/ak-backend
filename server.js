@@ -31,7 +31,33 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
+const jwt = require('jsonwebtoken');
+
+// Admin Login API
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+    const token = jwt.sign({ username }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
+    res.json({ success: true, token });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid credentials' });
+  }
+});
+
+// Admin API to fetch all messages
+app.get('/api/admin/messages', async (req, res) => {
+  try {
+    const messages = await Contact.find().sort({ _id: -1 });
+    res.json(messages);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log('Server is running on port ' + PORT);
 });
+
+
